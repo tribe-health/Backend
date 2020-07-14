@@ -23,6 +23,11 @@ namespace CovidSafe.DAL.Services
         private IMessageContainerRepository _reportRepo;
 
         /// <summary>
+        /// Maximal precision of regions used for keys.
+        /// </summary>
+        private const int MAX_NARROWCAST_MESSAGE_AGE_DAYS = 14;
+
+        /// <summary>
         /// Minimal precision of regions used for keys.
         /// </summary>
         private int PrecisionMin = 0;
@@ -85,6 +90,9 @@ namespace CovidSafe.DAL.Services
                 // Validate region
                 RequestValidationResult validationResult = region.Validate();
 
+                //Clip timestamp to UtcNow - 14 days
+                lastTimestamp = Math.Max(lastTimestamp, DateTimeOffset.UtcNow.AddDays(-MAX_NARROWCAST_MESSAGE_AGE_DAYS).ToUnixTimeMilliseconds());
+
                 // Validate timestamp
                 validationResult.Combine(Validator.ValidateTimestamp(lastTimestamp));
 
@@ -109,6 +117,10 @@ namespace CovidSafe.DAL.Services
             }
 
             RequestValidationResult validationResult = region.Validate();
+
+            //Clip timestamp to UtcNow - 14 days
+            lastTimestamp = Math.Max(lastTimestamp, DateTimeOffset.UtcNow.AddDays(-MAX_NARROWCAST_MESSAGE_AGE_DAYS).ToUnixTimeMilliseconds());
+
             validationResult.Combine(Validator.ValidateTimestamp(lastTimestamp, parameterName: nameof(lastTimestamp)));
 
             if(validationResult.Passed)
